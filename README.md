@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# GraphQL-Job-Board-API
-=======
 # GraphQL Job Board API
 
 A FastAPI-based GraphQL API for managing employers and job postings. This project demonstrates a complete GraphQL implementation with CRUD operations, database integration, and a modern Python web framework.
@@ -33,7 +30,6 @@ A FastAPI-based GraphQL API for managing employers and job postings. This projec
 graphql/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py                 # FastAPI application entry point
 │   ├── db/
 │   │   ├── __init__.py
 │   │   ├── data.py            # Sample data for seeding
@@ -57,8 +53,9 @@ graphql/
 │   └── settings/
 │       ├── __init__.py
 │       └── config.py          # Database and app configuration
+├── main.py                    # FastAPI application entry point
 ├── requirements.txt           # Python dependencies
-└── README.md                 # This file
+└── README.md                  # This file
 ```
 
 ## 🔧 Prerequisites
@@ -106,11 +103,11 @@ graphql/
 
 1. **Start the development server:**
    ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 2. **Access the application:**
-   - **GraphQL Playground:** http://localhost:8000/graphql
+   - **GraphQL Playground:** http://localhost:8000/
    - **REST Endpoints:**
      - http://localhost:8000/employers
      - http://localhost:8000/jobs
@@ -322,4 +319,3 @@ mutation {
 ---
 
 Happy coding! 🎉
->>>>>>> 7a7265b (initial commit)
