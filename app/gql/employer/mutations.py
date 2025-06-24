@@ -3,7 +3,7 @@ from app.gql.types import EmployerObject
 from app.db.models import Employer
 from app.db.database import Session
 from app.db.database import Session
-from app.utils import get_authenticated_user
+from app.utils import admin_user
 
 class AddEmployer(Mutation):
     class Arguments:
@@ -13,12 +13,8 @@ class AddEmployer(Mutation):
 
     employer_info = Field(lambda: EmployerObject)
 
-    # temporary
-    authenticated_as = Field(String)
-
-    @staticmethod
+    @admin_user
     def mutate(root, info, name, contact_email, industry):
-        user = get_authenticated_user(info.context)
         with Session() as session:
             employer = Employer(
                 name=name,
@@ -29,7 +25,7 @@ class AddEmployer(Mutation):
             session.commit()
             session.refresh(employer)
             session.close()
-            return AddEmployer(employer_info=employer, authenticated_as=user.email)
+            return AddEmployer(employer_info=employer)
 
 class UpdateEmployer(Mutation):
     class Arguments:
@@ -40,7 +36,7 @@ class UpdateEmployer(Mutation):
 
     employer_info = Field(lambda: EmployerObject)
 
-    @staticmethod
+    @admin_user
     def mutate(root, info, employer_id, name=None, contact_email=None, industry=None):
         with Session() as session:
             employer = session.query(Employer).filter(Employer.id == employer_id).first()
@@ -64,7 +60,7 @@ class DeleteEmployer(Mutation):
 
     success = String()
 
-    @staticmethod
+    @admin_user
     def mutate(root, info, employer_id):
         with Session() as session:
             employer = session.query(Employer).filter(Employer.id == employer_id).first()

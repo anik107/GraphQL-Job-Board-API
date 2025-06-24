@@ -1,10 +1,16 @@
-from graphene import Mutation, String, Field
+from graphene import Mutation, String, Field, Int
 from graphql import GraphQLError
 from app.db.database import Session
-from app.db.models import User
-from app.gql.types import UserObject
-from app.utils import generate_token, hash_password, verify_password, get_authenticated_user
-
+from app.db.models import JobApplication, User
+from app.gql.types import JobApplicationObject, UserObject
+from app.utils import (
+    generate_token,
+    hash_password,
+    verify_password,
+    auth_user_same_as,
+    get_authenticated_user,
+    auth_user
+)
 class LoginUser(Mutation):
     """Mutation to log in a user."""
 
@@ -28,7 +34,6 @@ class LoginUser(Mutation):
 
 class AddUser(Mutation):
     """Mutation to add a new user."""
-
     class Arguments:
         username = String(required=True)
         email = String(required=True)
@@ -62,3 +67,34 @@ class AddUser(Mutation):
             session.refresh(user)
             session.close()
             return AddUser(user_info=user)
+
+class ApplyToJob(Mutation):
+    """Mutation to apply to a job."""
+    class Arguments:
+        job_id = Int(required=True)
+        user_id = Int(required=True)
+
+    job_application = Field(lambda: JobApplicationObject)
+
+    @auth_user_same_as
+    def mutate(root, info, job_id, user_id):
+        with Session() as session:
+            user = session.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise GraphQLError("User not found")
+
+            job_application = session.query(JobApplication).filter(
+                JobApplication.job_id == job_id,
+                JobApplication.user_id == user_id
+            ).first()
+            if job_application:
+                raise GraphQLError("User has already applied to this job")
+            job_application = JobApplication(
+                job_id=job_id,
+                user_id=user_id
+            )
+            session.add(job_application)
+            session.commit()
+            session.refresh(job_application)
+            session.close()
+            return ApplyToJob(job_application=job_application)

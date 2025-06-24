@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from datetime import timezone
+from functools import wraps
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from graphql import GraphQLError
@@ -40,7 +41,8 @@ def get_authenticated_user(context):
     """Placeholder function to get the authenticated user."""
     request_object = context.get('request')
     auth_header = request_object.headers.get('Authorization')
-    if not auth_header:
+    token = auth_header.split(" ")
+    if not auth_header or len(token) != 2 or token[0].lower() != 'bearer':
         raise GraphQLError("Authentication credentials were not provided.")
     token = auth_header.split(" ")[1]
     try:
@@ -61,3 +63,31 @@ def get_authenticated_user(context):
         raise GraphQLError("Token has expired.")
     except jwt.InvalidTokenError:
         raise GraphQLError("Invalid token.")
+    except Exception as e:
+        raise GraphQLError(f"An error occurred while decoding the token: {str(e)}")
+
+def admin_user(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        User = get_authenticated_user(args[1].context)
+        if not User or User.role != "admin":
+            raise GraphQLError("Only admins can perform this action")
+        return func(*args, **kwargs)
+    return wrapper
+
+def auth_user(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        get_authenticated_user(args[1].context)
+        return func(*args, **kwargs)
+    return wrapper
+
+def auth_user_same_as(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        User = get_authenticated_user(args[1].context)
+        uid = kwargs.get('user_id')
+        if not User or User.id != uid:
+            raise GraphQLError("User not authorized to perform this action")
+        return func(*args, **kwargs)
+    return wrapper

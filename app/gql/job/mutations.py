@@ -2,7 +2,7 @@ from graphene import Mutation, String, Int, Field
 from app.gql.types import JobObject
 from app.db.database import Session
 from app.db.models import Job
-
+from app.utils import admin_user
 class AddJob(Mutation):
     class Arguments:
         title = String(required=True)
@@ -11,7 +11,7 @@ class AddJob(Mutation):
 
     job = Field(lambda: JobObject)
 
-    @staticmethod
+    @admin_user
     def mutate(root, info, title, description, employer_id):
         with Session() as session:
             job = Job(
@@ -33,7 +33,7 @@ class UpdateJob(Mutation):
 
     job = Field(lambda: JobObject)
 
-    @staticmethod
+    @admin_user
     def mutate(root, info, job_id, title=None, description=None, employer_id=None):
         with Session() as session:
             job = session.query(Job).filter(Job.id == job_id).first()
@@ -58,7 +58,7 @@ class DeleteJob(Mutation):
 
     success = String()
 
-    @staticmethod
+    @admin_user
     def mutate(root, info, job_id):
         with Session() as session:
             job_id = session.query(Job).filter(Job.id == job_id).first()
