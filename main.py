@@ -26,7 +26,7 @@ def get_jobs():
     with Session() as session:
         return session.query(Job).all()
 
-app.mount("/graphql", GraphQLApp(
+app.mount("/", GraphQLApp(
     schema=schema,
     on_get=make_playground_handler()
 ))
